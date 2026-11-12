@@ -1,6 +1,6 @@
 {
-  "name": "Minimal POS — ระบบจัดการร้าน",
-  "short_name": "Minimal POS",
+  "name": "bar",
+  "short_name": "Bar POS",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#F8FAFC",

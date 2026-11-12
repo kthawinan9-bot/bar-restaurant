@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>Minimal POS — ระบบจัดการร้านอาหารและบาร์</title>
+  <title>Bar-Restaurant — ระบบจัดการร้านอาหารและบาร์</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -219,20 +219,6 @@
           <button type="button" onclick="openStartShiftModal()" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold whitespace-nowrap transition shrink-0">
             + เปิดกะตอนนี้
           </button>
-        </div>
-
-        <!-- แถบเลือกโต๊ะด่วนสำหรับพนักงานมือถือ (แสดงโต๊ะว่างและยอดบิลแต่ละโต๊ะ) -->
-        <div id="staff-quick-tables" class="bg-white p-2.5 rounded-2xl border border-slate-200/80 shrink-0 space-y-1.5">
-          <div class="flex items-center justify-between px-1">
-            <span class="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-              <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-slate-900"></i>
-              <span>เลือกโต๊ะรับออเดอร์ / คิดเงิน</span>
-            </span>
-            <button type="button" onclick="selectWalkIn()" class="text-[11px] font-semibold text-slate-500 hover:text-slate-900">
-              สลับเป็นหน้าร้าน
-            </button>
-          </div>
-          <div id="staff-table-strip" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5"></div>
         </div>
 
 

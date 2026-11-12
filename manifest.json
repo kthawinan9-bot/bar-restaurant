@@ -1,0 +1,15 @@
+{
+  "name": "Minimal POS — ระบบจัดการร้าน",
+  "short_name": "Minimal POS",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#0F172A",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3081/3081559.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

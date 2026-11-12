@@ -8,7 +8,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/0NpJvyfZ/a9ffba44-87dc-4450-89a7-c101095ee242.png">
+  <link rel="apple-touch-icon" href="https://i.postimg.cc/0NpJvyfZ/a9ffba44-87dc-4450-89a7-c101095ee242.png">
   <link rel="manifest" href="./manifest.json">
+
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -2151,8 +2154,10 @@ function checkPersistentAuth() {
       renderBrandLogos();
     }
 
+const DEFAULT_STORE_LOGO = 'https://i.postimg.cc/0NpJvyfZ/a9ffba44-87dc-4450-89a7-c101095ee242.png';
+
     function renderBrandLogos() {
-      const logoUrl = normalizeDriveImageUrl(STATE.settings.storeLogo);
+      const logoUrl = normalizeDriveImageUrl(STATE.settings.storeLogo) || DEFAULT_STORE_LOGO;
       const targets = [
         { id: 'sidebar-logo-box', cls: 'w-5 h-5' },
         { id: 'login-logo-box', cls: 'w-6 h-6' }

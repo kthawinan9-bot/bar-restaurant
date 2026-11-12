@@ -1933,41 +1933,7 @@
       showToast('เปิดเสียงแจ้งเตือนออเดอร์ใหม่เรียบร้อย');
     }
 
-function applyKdsOnlyMode() {
-      if (!isKdsAppMode()) return;
-      const sidebar = document.getElementById('left-sidebar');
-      if (sidebar) sidebar.classList.add('hidden', 'lg:hidden');
 
-      const topBar = document.querySelector('.lg\\:hidden.h-14');
-      if (topBar) {
-        topBar.classList.remove('lg:hidden');
-        topBar.classList.add('flex');
-        const menuBtn = topBar.querySelector('button');
-        if (menuBtn) menuBtn.classList.add('hidden');
-
-        const staffName = CURRENT_USER ? CURRENT_USER.name : '';
-        const titleEl = document.getElementById('mobile-store-name');
-        if (titleEl) {
-          titleEl.textContent = `${STATE.settings.storeName || 'MINIMAL POS'} • จอครัว & บาร์น้ำ (${staffName})`;
-        }
-
-        // เพิ่มปุ่มสลับพนักงานมุมขวาบนสำหรับเปลี่ยนผู้รับผิดชอบ
-        let switchBtn = document.getElementById('kds-switch-user-btn');
-        if (!switchBtn) {
-          switchBtn = document.createElement('button');
-          switchBtn.id = 'kds-switch-user-btn';
-          switchBtn.type = 'button';
-          switchBtn.onclick = handleLogout;
-          switchBtn.className = 'ml-2 px-2.5 py-1 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold transition';
-          switchBtn.textContent = 'สลับพนักงาน';
-          topBar.appendChild(switchBtn);
-        }
-      }
-
-      if (ACTIVE_PAGE !== 'kds') {
-        switchPage('kds');
-      }
-    }
 
     function captureServerBaseline() {
       SERVER_BASELINE = JSON.parse(JSON.stringify({
@@ -2183,6 +2149,7 @@ function checkPersistentAuth() {
     function handleLogout() {
       localStorage.removeItem(AUTH_KEY);
       CURRENT_USER = null;
+      DID_AUTO_SELECT_KDS_TAB = false;
       document.getElementById('login-password').value = '';
       document.getElementById('login-screen').classList.remove('hidden');
     }
@@ -2302,6 +2269,13 @@ function checkPersistentAuth() {
 
     // ==================== NAVIGATION ====================
 function switchPage(page) {
+      if (CURRENT_USER) {
+        if (isKdsAppMode() && page !== 'kds') {
+          page = 'kds';
+        } else if (isStaffAppMode() && !['pos', 'kds'].includes(page)) {
+          page = 'pos';
+        }
+      }
       ACTIVE_PAGE = page;
       toggleMobileSidebar(false);
       document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -2325,13 +2299,12 @@ function switchPage(page) {
         syncFromServer(true);
       }
     }
-    if (isStaffAppMode() && !['pos', 'kds'].includes(page)) {
-      page = 'pos';
-    }
 
     function renderAll() {
+      applyRolePermissions();
       updateNavBadges();
       if (ACTIVE_PAGE === 'pos') {
+        renderStaffTableStrip();
         renderServiceModeUI();
         renderPosCategories();
         renderPosProducts();
@@ -2466,22 +2439,7 @@ function switchPage(page) {
       openModal('modal-table-select');
     }
 
-    function isStaffAppMode() {
-      if (FORCE_STAFF_MODE) return true;
-      return !!(CURRENT_USER && String(CURRENT_USER.role || '').toLowerCase() === 'staff');
-    }
-
-    function applyStaffAppMode() {
-      const staffOnly = isStaffAppMode();
-      ['bills', 'inventory', 'shifts', 'finance', 'settings'].forEach(nav => {
-        const btn = document.querySelector(`.nav-btn[data-nav="${nav}"]`);
-        if (btn) btn.classList.toggle('hidden', staffOnly);
-      });
-      if (staffOnly && !['pos', 'kds'].includes(ACTIVE_PAGE)) {
-        switchPage('pos');
-      }
-    }
-
+    
     function renderStaffTableStrip() {
       const strip = document.getElementById('staff-table-strip');
       if (!strip) return;
@@ -5394,6 +5352,100 @@ function completeKdsTicketOptimistic(ticketId) {
 
       scanAllSelects();
     })();
+
+let DID_AUTO_SELECT_KDS_TAB = false;
+    let IS_APPLYING_ROLE = false;
+
+    function getNormalizedUserRole() {
+      return String((CURRENT_USER && CURRENT_USER.role) || '').trim().toLowerCase();
+    }
+
+    function isKitchenRole() {
+      const r = getNormalizedUserRole();
+      return r === 'kitchen staff' || r === 'kitchen';
+    }
+
+    function isBeverageRole() {
+      const r = getNormalizedUserRole();
+      return r === 'beverage staff' || r === 'beverage' || r === 'bar';
+    }
+
+    function isKdsAppMode() {
+      return APP_MODE === 'kds' || isKitchenRole() || isBeverageRole();
+    }
+
+    function isStaffAppMode() {
+      if (isKdsAppMode()) return false;
+      return APP_MODE === 'staff' || getNormalizedUserRole() === 'staff';
+    }
+
+    function setNavItemVisible(pageKey, isVisible) {
+      const selectors = [
+        `[data-nav="${pageKey}"]`,
+        `[data-page="${pageKey}"]`,
+        `#nav-${pageKey}`,
+        `[onclick*="switchPage('${pageKey}')"]`,
+        `[onclick*='switchPage("${pageKey}")']`
+      ];
+      document.querySelectorAll(selectors.join(',')).forEach(el => {
+        el.classList.toggle('hidden', !isVisible);
+        el.style.display = isVisible ? '' : 'none';
+      });
+    }
+
+    function autoSelectKdsStationByRole() {
+      if (DID_AUTO_SELECT_KDS_TAB) return;
+      const targetText = isKitchenRole() ? 'บาร์อาหาร' : isBeverageRole() ? 'บาร์น้ำ' : '';
+      if (!targetText) return;
+
+      const kdsPage = document.getElementById('page-kds');
+      if (!kdsPage) return;
+      for (const btn of kdsPage.querySelectorAll('button')) {
+        if (btn.textContent && btn.textContent.includes(targetText)) {
+          DID_AUTO_SELECT_KDS_TAB = true;
+          btn.click();
+          break;
+        }
+      }
+    }
+
+    function applyRolePermissions() {
+      if (!CURRENT_USER || IS_APPLYING_ROLE) return;
+      IS_APPLYING_ROLE = true;
+      try {
+        const kdsOnly = isKdsAppMode();
+        const staffOnly = isStaffAppMode();
+
+        // 1. แสดง/ซ่อนเมนูตามสิทธิ์ของตำแหน่งงาน
+        setNavItemVisible('pos', !kdsOnly);
+        setNavItemVisible('kds', true);
+        ['bills', 'inventory', 'shifts', 'finance', 'settings'].forEach(nav => {
+          setNavItemVisible(nav, !kdsOnly && !staffOnly);
+        });
+
+        // 2. บังคับเปิดหน้าที่ตรงกับตำแหน่งงานทันที
+        if (kdsOnly) {
+          if (ACTIVE_PAGE !== 'kds') {
+            switchPage('kds');
+          }
+          autoSelectKdsStationByRole();
+        } else if (staffOnly) {
+          if (!['pos', 'kds'].includes(ACTIVE_PAGE)) {
+            switchPage('pos');
+          }
+        }
+      } finally {
+        IS_APPLYING_ROLE = false;
+      }
+    }
+
+    function applyStaffAppMode() {
+      applyRolePermissions();
+    }
+
+    function applyKdsOnlyMode() {
+      applyRolePermissions();
+    }
 
   </script>
 </body>

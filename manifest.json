@@ -1,5 +1,5 @@
 {
-  "name": "bar",
+  "name": "bar-restaurant : ระบบจัดการร้านค้า",
   "short_name": "Bar POS",
   "start_url": "./",
   "display": "standalone",
